@@ -13,13 +13,12 @@
 </head>
 <body>
   <header>
+    {% if page.section == 'home' %}
     <b><a href="/">Home</a></b>
-    <a href="#">About</a>
-    <a href="#">Projects</a>
+    {% else %}
+    <a href="/">Home</a>
+    {% endif %}
   </header>
 	{{ content }}
-  <footer>
-    You can reach me at <a href="mailto:eyston@gmail.com">eyston@gmail.com</a> or via twitter <a href="http://twitter.com/hueypetersen">@hueypetersen</a>.
-	</footer>
 </body>
 </html>
