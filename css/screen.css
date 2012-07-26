@@ -16,7 +16,7 @@ header a {
   margin-left: 1em;
 }
 
-header a:first-child {
+header a.home {
   margin-left: 0;
 }
 

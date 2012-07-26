@@ -14,10 +14,17 @@
 <body>
   <header>
     {% if page.section == 'home' %}
-    <b><a href="/">Home</a></b>
+    <b><a class="home" href="/">Home</a></b>
     {% else %}
-    <a href="/">Home</a>
+    <a class="home" href="/">Home</a>
     {% endif %}
+
+    {% if page.section == 'about' %}
+    <b><a href="/about.html">About</a></b>
+    {% else %}
+    <a href="/about.html">About</a>
+    {% endif %}
+
   </header>
 	{{ content }}
 </body>
