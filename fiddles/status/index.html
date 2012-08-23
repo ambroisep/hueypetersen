@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="jquery.min.js" type="text/javascript"></script>
+  <script src="d3.min.js" type="text/javascript"></script>
+  <script src="moment.min.js" type="text/javascript"></script>
+  <script src="angular.min.js" type="text/javascript"></script>
+  <script src="app.js" type="text/javascript"></script>
+	<style>
+    body { font-family: helvetica, arial, sans-serif; font-size: 12px; line-height: 18px; margin-top: 40px; }
+    * { margin: 0; padding: 0; }
+
+    #timeline { margin: auto; width: 500px; }
+
+    .events { position: relative; margin-left: 50px; }
+
+    .event { list-style: none; display: block; width: 300px; background-color: rgba(0, 0, 0, 0.796875); border-radius: 6px; padding: 3px; box-shadow: rgba(0, 0, 0, 0.296875) 0px 3px 7px 0px; }
+    .event > header { background-color: whiteSmoke; padding: 5px 9px; border-top-left-radius: 3px; border-top-right-radius: 3px }
+    .event h1 { font-size: 12px; line-height: 20px;  }
+    .event > div { font-size: 12px; background-color: white; padding: 9px; border-bottom-left-radius: 3px; border-bottom-right-radius: 3px; }
+    .event .duration { display: block; float: right; padding: 1px 5px; background-color: #ddd; border-radius: 9px; height: 18px; margin-left: 5px; }
+    .event .time { color: #aaa; }
+    .event { position: absolute; margin-bottom: 10px; }
+
+    .vline { stroke-width: 3.5px; stroke: #0c0; }
+    .vbubble { stroke-width: 0.5px; stroke: #0c0; fill: #0c0; }
+    .lineEvent { stroke-width: 1.5px; stroke: #fff; }
+    .lineEvent.high { fill: red; }
+    .lineEvent.medium { fill: orange; }
+    .lineEvent.low { fill: yellow; }
+    .lineEvent.info { fill: blue; }
+    .connection { stroke-width: 1.5px; stroke: #999; fill: none; }
+
+    form { float: left; margin-left: -300px; width: 290px; font-size: 16px; }
+    form input { display: block; padding: 3px; margin: 2px; font-size: 16px; }
+    form input[type=text] { width: 220px; }
+    form input[type=radio] { display: inline; }
+    form input[type=submit], form input[type=button] { display: inline; }
+
+
+  </style>
+</head>
+<body ng-app="demo">
+	<div id="timeline" ng-controller="TimelineController" timeline>
+    <form ng-submit="addEvent()">
+      <h1>New Event</h1>
+      <input type="text" ng-model="eventHeadline" placeholder="Headline">
+      <input type="text" ng-model="eventSummary" placeholder="Summary">
+      <input type="text" ng-model="eventStartTimeHour" placeholder="Start Hour (HH)">
+      <input type="text" ng-model="eventStartTimeMinute" placeholder="Start Minute (MM)">
+      <input type="text" ng-model="eventDuration" placeholder="Duration (minutes)">
+      <input type="radio" ng-model="eventSeverity" value="info"> info
+      <input type="radio" ng-model="eventSeverity" value="low"> low
+      <input type="radio" ng-model="eventSeverity" value="medium"> medium
+      <input type="radio" ng-model="eventSeverity" value="high"> high<br>
+      <input type="submit" value="Add">
+      <input type="button" value="Add Random Event" ng-click="addRandomEvent()">
+    </form>
+    <ul class="events">
+      <li class="event" ng-repeat="event in events">
+        <header>
+          <span class="duration">{{ duration(event) }}</span>
+          <h1>{{ event.headline }}</h1>
+        </header>
+        <div>
+          <p>{{ event.summary }}</p>
+          <span class="time">{{ eventTime(event) }}<span>
+        </div>
+      </li>
+    </ul>
+  <div>
+
+</body>
+</html>
