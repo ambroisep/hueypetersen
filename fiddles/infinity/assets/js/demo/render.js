@@ -73,8 +73,8 @@
 
     // position the pugs
     pugs.reduce(function(columnIndex, pug) {
-      $pug = pug[0];
-      height = pug[1];
+      var $pug = pug[0];
+      var height = pug[1];
       $pug.css('display', 'visible')
         .css('position', 'absolute')
         .css('top', columnHeights[columnIndex] + 'px')
