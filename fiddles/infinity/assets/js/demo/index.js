@@ -42,15 +42,15 @@
       return $el.offset().top <= viewportBottom;
     }
     spinner.insertAfter($('#demo').closest('.row'));
-    $(window).on('scroll', function() {
-      if(!updateScheduled) {
-        setTimeout(function() {
-          if(onscreen(spinner)) Pug.bomb(100);
-          updateScheduled = false;
-        }, 500);
-        updateScheduled = true;
-      }
-    });
+    // $(window).on('scroll', function() {
+    //   if(!updateScheduled) {
+    //     setTimeout(function() {
+    //       if(onscreen(spinner)) Pug.bomb(100);
+    //       updateScheduled = false;
+    //     }, 500);
+    //     updateScheduled = true;
+    //   }
+    // });
   }();
 
 

@@ -55,21 +55,51 @@
     });
   }
 
+  function batch(num) {
+    var index = 0, length = columns.length, $column = $(columns[0]), pugs = [], columnHeights = [0, 0, 0];
+
+    // add them all
+    $column.css('position', 'relative');
+    for(index = 0; index < num * length; index++) {
+      var $pug = $(pug());
+      $pug.css('display', 'hidden')
+        .css('position', 'absolute');
+      $column.append($pug);
+      pugs.push($pug);
+    }
+
+    // get the heights -- tuple of [pug, height]
+    pugs = pugs.map(function(pug) { return [pug, pug.outerHeight(true)]; });
+
+    // position the pugs
+    pugs.reduce(function(columnIndex, pug) {
+      $pug = pug[0];
+      height = pug[1];
+      $pug.css('display', 'visible')
+        .css('position', 'absolute')
+        .css('top', columnHeights[columnIndex] + 'px')
+        .css('left', (columnIndex * 340) + 'px');
+      columnHeights[columnIndex] += height;
+      return (columnIndex + 1) % length;
+    }, 0);
+  }
 
   function row() {
     var index, colIndex, length, $minCol, $currCol, $pug;
 
     for(index = 0, length = columns.length; index < length; index++) {
 
-      for(colIndex = 0; colIndex < length; colIndex++) {
-        $currCol = $(columns[colIndex]);
+      // for(colIndex = 0; colIndex < length; colIndex++) {
+      //   $currCol = $(columns[colIndex]);
 
-        if(!$minCol) $minCol = $currCol;
-        else $minCol = $minCol.height() > $currCol.height() ? $currCol : $minCol;
-      }
+      //   if(!$minCol) $minCol = $currCol;
+      //   else $minCol = $minCol.height() > $currCol.height() ? $currCol : $minCol;
+      // }
+
+      $minCol = $(columns[index]);
 
       if(Pug.config.infinityOn) $minCol.data('listView').append(pug());
-      else $minCol.append(pug);
+      else $minCol.append(pug());
     }
   }
 
@@ -77,10 +107,18 @@
     var index;
     if(num <= 0) return;
 
-    for(index = 0; index < num && index < 70; index++) {
-      row();
-    }
-    num -= index;
+    var start = Date.now();
+
+    batch(num);
+    // for(index = 0; index < num; index++) {
+    //   row();
+    // }
+
+    $(window).height();
+
+    var end = Date.now();
+    console.log('time: ', end - start);
+
 
     if(!Pug.config.infinityOn) {
       $pug = columns.find('.pug');
@@ -88,8 +126,6 @@
         $(this).attr('src', $(this).attr('data-original'));
       });
     }
-
-    setTimeout(function() { pb(num - 1); }, 0);
   }
 
   Pug.bomb = pb;

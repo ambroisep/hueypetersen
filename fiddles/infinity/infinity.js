@@ -53,6 +53,11 @@
   config.PAGE_TO_SCREEN_RATIO = 3;
   config.SCROLL_THROTTLE = 350;
 
+  var windowHeight = $(window).height();
+
+  $(window).bind('resize', function() {
+    windowHeight = $(window).height();
+  })
 
 
   // ListView Class
@@ -680,7 +685,8 @@
   // Returns false if the Page is at max capacity; false otherwise.
 
   Page.prototype.hasVacancy = function() {
-    return this.height < $window.height() * config.PAGE_TO_SCREEN_RATIO;
+    // return this.height < $window.height() * config.PAGE_TO_SCREEN_RATIO;
+    return this.height < windowHeight * config.PAGE_TO_SCREEN_RATIO;
   };
 
 
