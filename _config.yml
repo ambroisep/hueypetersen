@@ -1,2 +1,6 @@
+defaults:
+  author: Huey Petersen
+description: "I’m Huey Petersen, an independent software developer in Cleveland Ohio. I work with C#, Javascript, and Ruby while maintaining a strong interest in Clojure and all things functional."
 pygments: true
 permalink: /posts/:year/:month/:day/:title/
+url: hueypetersen.com
