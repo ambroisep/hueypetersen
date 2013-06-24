@@ -160,7 +160,7 @@ There are then two event listeners which communicate back to the controller when
 
 The end result is that the component is able to highlight and select items attached to any arbitrary html elements.  Success!  The actual `typeahead` component contains a bunch of code in its linker / controller but its pretty basic typeahead stuff and agnostic to how the list is rendered.
 
-I dunno why but I love that customizing the look of the typeahed list consists of writing the same type of Angular code I use to customize how anything looks.  I don't have to learn the magic configuration language of a plugin.  Win.
+I love that customizing the look of the typeahed list consists of writing the same type of Angular code I use to customize how anything looks.  I don't have to learn the magic configuration language of a plugin.  Win.
 
 Here is the final template with all the nitty-gritty of the `typeahead` component wired up.
 
