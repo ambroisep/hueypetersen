@@ -104,9 +104,9 @@ When the user types `black` the first item in the list is highlighted (Black Eye
 
 The issue is that the `typeahead` component places no constraints on the structure of the rendered list so it has no idea which item model corresponds to which html element.  We need a way to link the items in the list together so that they can communicate on which one needs to be highlighted.
 
-One way to accomplish this is with a directive controller.  The typeahead component (which is a directive in case that isn't clear) can declare a controller which other directives can request access to.  This controller can then be a way to communicate between the directives -- namely which item is currently highlighted.
+One way to accomplish this is with a directive controller.  The typeahead component (which is a directive in case that isn't clear) can declare a controller which other directives can request access to.  This controller allows communication between the directives -- namely which item is currently highlighted.
 
-So now I create a child directive named `typeahead-item` (yeah, I'm great at names) which requests the `typeahead` controller.  This `typeahead-item` directive can then be placed on each selectable item within the list of items like so:
+The directive responsible for each typeahead item is called `typeahead-item` (yeah, I'm great at names), which is placed on each selectable item within the list like so:
 
 {% highlight html %}
 
@@ -118,7 +118,7 @@ So now I create a child directive named `typeahead-item` (yeah, I'm great at nam
 
 {% endhighlight %}
 
-The `typeahead-item` directive links a given model in the list (the artist) to the corresponding html (the `li` element).  The `typeahead` component keeps track of which item is currently highlighted and the `typeahead-item` directives watch this value and do a comparison with their own item and act accordingly.  In my case the action is just adding or removing a class.
+The `typeahead-item` directive links a given model (the artist) to the corresponding html (the `li` element).  The `typeahead` component keeps track of which item is currently highlighted and the `typeahead-item` directives watch this value with a comparison on their own item and act accordingly.  In my case the action is just adding or removing a class.
 
 Heres the code:
 
