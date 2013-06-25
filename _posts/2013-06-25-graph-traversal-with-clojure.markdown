@@ -3,15 +3,15 @@ layout: post
 title: Graph Traversal with Clojure
 ---
 
-I'm going through the [Coursera](https://www.coursera.org/) [Algorithms I](https://www.coursera.org/course/algo) class in my spare time.  Like most of my experiences with Coursera I sign up for the course with little expectation of doing the course but wanting to unlock all of the videos and other material for perusal later.  So I suck at MOOCs.
+I'm going through the [Coursera](https://www.coursera.org/) [Algorithms I](https://www.coursera.org/course/algo) class in my spare time.  Like most of my experiences with Coursera I signed up for the course with little expectation of doing the course but wanting to unlock all of the videos and other material for perusal later.  So I suck at MOOCs.
 
 I'm on the course section covering graphs.  Graphs are awesome and its a nice step up from sorting.  I want to take a shot at implementing some graph algorithms using Clojure and figure a good starting point would be graph traversal using [breadth first search](https://en.wikipedia.org/wiki/Breadth-first_search) and [depth first search](http://en.wikipedia.org/wiki/Depth-first_search).
+
+*__WARNING:__ I am no Clojure expert!*
 
 My starting point was creating a function which would traverse a graph and print out each node as it went.  I had no idea what I wanted to do so debug print statements seemed as good as any.  Then I thought it would be much cooler to have a function passed in which would get called on each node as it traversed the graph.  Then I realized I'm implementing my own map function and that I'm probably wrong.
 
 In order to get Clojure's built in map function to work with the graph I would need to turn it into a sequence.  Ah, now that seems like a reasonable idea.
-
-*__WARNING:__ I am no Clojure expert!*
 
 Here is how I'm representing a graph.
 
@@ -78,7 +78,7 @@ This works but its eager -- the graph is fully traversed when you call the funct
 
 {% endhighlight %}
 
-Instead of `loop` and `recur` we define a recursive function, `rec-dfs`, and use `lazy-seq` to build up the sequence with recursive calls.  Each call `cons` the current vertex to a new recursive call finally ending with a `nil` (end of sequence).  Through the magic of `lazy-seq` we don't have to worry about blowing the stack and get the benefits of the sequence being lazy.  This means if I `take 2` from the sequence we only traverse 2 nodes, not the entire graph as we would have done in `traverse-graph-dfs`.
+Instead of `loop` and `recur` we define a recursive function, `rec-dfs`, and use `lazy-seq` to build up the sequence with recursive calls.  Each call `cons` the current vertex to the result of a new recursive call finally ending with a `nil` (end of sequence).  Through the magic of `lazy-seq` we don't have to worry about blowing the stack and get the benefits of the sequence being lazy.  This means if I `take 2` from the sequence we only traverse 2 nodes, not the entire graph as we would have done in `traverse-graph-dfs`.
 
 {% highlight clojure %}
 
