@@ -37,7 +37,7 @@ Rx.promiseToObservable = promiseToObservable
 
 {% endhighlight %}
 
-This is a pretty generic pattern for turning any promise into an observable -- on success callback call `onNext` and `onComplete` and on an error call `onError`.  I end up just attaching it to the `window.Rx` object.
+This is a pretty generic pattern for turning any promise into an observable -- on success call `onNext` and `onComplete` and on an error call `onError`.  I end up just attaching it to the `window.Rx` object.
 
 Why would you want to do this?  The canonical example is a typeahead.  When the user searches for a term you perform an asynchronous web request which fetches the potential completions.  With a typeahead the user is constantly changing their search term which is triggering several asynchronous requests.  One potential problem is if they search for *"black"* and then *"black sab"* you have no control over which web request will finish last and you don't want to end up having the results for *"black sab"* overwrite the results for *"black"* by the requests finishing out of order.
 
