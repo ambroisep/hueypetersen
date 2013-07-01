@@ -192,3 +192,5 @@ And with results:
 ![angular typeahead](/images/2013-06/angular-typeahead.png)
 
 Its like the last.fm one but uglier.  Mission accomplished.
+
+*__UPDATE:__ I pushed this demo to [heroku](http://ymusica.herokuapp.com/) and [code](https://github.com/eyston/ymusica) is on github.*
