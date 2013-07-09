@@ -139,7 +139,7 @@ The keys on the map are the available vertices to expand to and the values are a
 Priority Map
 ---
 
-One issue with this is that its a linear scan through the frontier.  Worst case scenario this could be all vertexes which would turn the algorithm into `O(n^2)`.  The course recommends the use of a heap data structure for the frontier which would make the algorithm `O(n*log(n))`.  I couldn't find a clojure persistent heap implementation but there is a persistent [priority map](https://github.com/clojure/data.priority-map) which still gets us the logarithmic operations we want.
+One issue with this is that its a linear scan through the frontier.  Worst case scenario this could be all vertices which would turn the algorithm into `O(n^2)`.  The course recommends the use of a heap data structure for the frontier which would make the algorithm `O(n*log(n))`.  I couldn't find a clojure persistent heap implementation but there is a persistent [priority map](https://github.com/clojure/data.priority-map) which still gets us the logarithmic operations we want.
 
 Finding the cheapest cost path now becomes:
 
