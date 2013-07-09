@@ -39,7 +39,7 @@ I created a pretty bare bones protocol for graphs this go around.  I'm from C# l
 
 {% endhighlight %}
 
-Dijkstra's just cares about `neighbors` and `cost`.  Here is the implementation of a directed and undirected graph.
+Dijkstra's just cares about `neighbors` and `cost`.  For completeness here is the implementation of a directed and undirected graph.
 
 {% highlight clojure %}
 
@@ -49,8 +49,8 @@ Dijkstra's just cares about `neighbors` and `cost`.  Here is the implementation 
   (neighbors [_ v] (keys (vs v {})))
   (add [_ v1 v2 c]
        (-> vs
-           (update-in [v1] assoc v2 c)
-           (update-in [v2] assoc v1 c)
+           (assoc-in [v1 v2] c)
+           (assoc-in [v2 v1] c)
            (UndirectedGraph.)))
   (cost [_ v1 v2] (get-in vs [v1 v2])))
 
@@ -60,7 +60,7 @@ Dijkstra's just cares about `neighbors` and `cost`.  Here is the implementation 
   (neighbors [_ v] (keys (vs v {})))
   (add [_ v1 v2 c]
        (-> vs
-           (update-in [v1] assoc v2 c)
+           (assoc-in [v1 v2] c)
            (DirectedGraph.)))
   (cost [_ v1 v2] (get-in vs [v1 v2])))
 
