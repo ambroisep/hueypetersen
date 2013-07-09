@@ -14,7 +14,7 @@ title: Dijkstra's Algorithm as a Sequence
 
 Graphs are cool.  After slogging through sorting arrays in the the [Coursera](https://www.coursera.org/) [Algorithms I](https://www.coursera.org/course/algo) class it is nice to implement algorithms that aren't built into the standard library.  They are also much more real world.  For example finding the shortest path in [Eve Online](http://www.eveonline.com/) from NOL-M9 to every system in [Delve](http://evemaps.dotlan.net/map/Delve) (visualized above using [D3.js](http://d3js.org/)).
 
-*__NOTE:__ You can drag the nodes to make sure no lines overlap if that is your thing ... it is mine.*
+*__NOTE:__ You can drag the systems to make sure no lines overlap if that is your thing ... it is mine.*
 
 Two of my favorite quotes from the [Joy of Clojure](http://www.amazon.com/books/dp/1935182641) are:
 
@@ -85,7 +85,7 @@ Dijkstra's Algorithm
 
 I'm not good enough to give a thorough explanation of the algorithm but the main idea is that it finds the shortest path from a vertex to every other connected vertex in a graph.  It does this by traversing the graph from vertex to vertex always selecting the cheapest cumulative path with each expansion.  In order to do this we keep a list of all vertices that have been explored (they already have a shortest path) and all available vertices for exploration along with their cost.  So each iteration is simply selecting the cheapest vertex available to explore and adding its neighbors to the list of available exploration vertices.
 
-Since Dijkstra's expands one node at a time I represent the algorithm as a lazy sequence.  Again, our two data structures are the explored vertices and the available frontier vertices to select from.
+Since Dijkstra's expands one vertex at a time I represent the algorithm as a lazy sequence.  Again, our two data structures are the explored vertices and the available frontier vertices to select from.
 
 Here is my first stab.
 
@@ -125,7 +125,7 @@ First thing we do is check if the frontier is empty.
 
 {% endhighlight %}
 
-If it is we have explored every connected node and can end the sequence by returning `nil`.  If the frontier is not empty we select the node with the cheapest cost for expansion.  Since we've expanded `s` the frontier would be the following data structure:
+If it is we have explored every connected vertex and can end the sequence by returning `nil`.  If the frontier is not empty we select the vertex with the cheapest cost for expansion.  Since we've expanded `s` the frontier would be the following data structure:
 
 {% highlight clojure %}
 
@@ -134,7 +134,7 @@ If it is we have explored every connected node and can end the sequence by retur
 
 {% endhighlight %}
 
-The keys on the map are the available vertexes to expand to and the values are a vector of cost and previous vertex.  When we `apply min-key (comp first second)` to `frontier` we are selecting the map entry with the cheapest cost.  `(comp first second)` transforms `[:v [1 :s]]` into `1` which would end up being the lowest cost (versus `4` for `[:w [4 :s]]`).  The map entry is then destructured for further use.
+The keys on the map are the available vertices to expand to and the values are a vector of cost and previous vertex.  When we `apply min-key (comp first second)` to `frontier` we are selecting the map entry with the cheapest cost.  `(comp first second)` transforms `[:v [1 :s]]` into `1` which would end up being the lowest cost (versus `4` for `[:w [4 :s]]`).  The map entry is then destructured for further use.
 
 Priority Map
 ---
@@ -151,7 +151,7 @@ Finding the cheapest cost path now becomes:
 
 We replace the `empty?` check with a `when-let` which will return `nil` if the frontier is empty.  `peek` on the frontier is `log(n)` and returns the cheapest cost path.
 
-If we benchmark the map version versus priority map version on a graph with ~5000 nodes the algorithm goes from `325ms` to `55ms`.  So thats cool -- go data structures!  In order to benchmark I used the neato [criterium library](https://github.com/hugoduncan/criterium).  It produces a pretty cool little report.
+If we benchmark the map version versus priority map version on a graph with ~5000 vertices the algorithm goes from `325ms` to `55ms`.  So thats cool -- go data structures!  In order to benchmark I used the neato [criterium library](https://github.com/hugoduncan/criterium).  It produces a pretty cool little report.
 
 {% highlight clojure %}
 
@@ -267,7 +267,7 @@ But who knows.
 Power of Sequence
 ---
 
-So now that I have a sequence it is pretty easy to find the shortest path between two nodes.
+So now that I have a sequence it is pretty easy to find the shortest path between two vertices.
 
 {% highlight clojure %}
 
