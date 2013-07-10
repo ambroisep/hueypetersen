@@ -3,7 +3,7 @@ layout: post
 title: Code Read of core.async Timeouts
 ---
 
-Clojure's `core.async` library allows [go-routine style programming](http://blog.drewolson.org/blog/2013/07/04/clojure-core-dot-async-and-go-a-code-comparison/) in clojure as a library.  This is pretty fancy -- the *'as a library'* part especially.  One thing to note is that currently the `go` blocks run on a fixed threadpool of size 2 + number-of-cores.  This means if you block within a `go` thread you can end up with thread starvation -- every thread in the threadpool is blocked.  So it is key that inside the `go` blocks every operation is non-blocking.
+Clojure's [`core.async`](http://clojure.com/blog/2013/06/28/clojure-core-async-channels.html) library allows [go-routine style programming](http://blog.drewolson.org/blog/2013/07/04/clojure-core-dot-async-and-go-a-code-comparison/) in clojure as a library.  This is pretty fancy -- the *'as a library'* part especially.  One thing to note is that currently the `go` blocks run on a fixed threadpool of size 2 + number-of-cores.  This means if you block within a `go` thread you can end up with thread starvation -- every thread in the threadpool is blocked.  So it is key that inside the `go` blocks every operation is non-blocking.
 
 A great of [explanation of non-blocking workflows](http://martintrojer.github.io/clojure/2013/07/07/coreasync-and-blocking-io/) was given by [Martin Trojer](https://twitter.com/martintrojer).  He examines blocking versus non-blocking web requests.  Good read.
 
@@ -158,7 +158,11 @@ So how do we use this map entry?
 
 {% endhighlight %}
 
-This bit of code is pretty cool.  The `and` is doing a null check.  If `me` (the map entry) is `null` (no entry exists with a timeout greater than or equal to the this timeout) we return `nil` and fail the [`when`](http://clojuredocs.org/clojure_core/clojure.core/when) which also returns `nil`.  If `me` isn't null we then test if the key timeout is within `TIMEOUT_RESOLUTION_MS` (defined as 10) of the this timeout.  If it isn't we fail the `and` and the `when` returns `nil`.  If instead the two timeout values are within 10 ms the `and` is true and the `when` expression is evaluated as the `channel` from this `TimeoutQueueEntry`.
+This bit of code is pretty cool.  We have three scenarios:
+
+- `me` is `null` and we fail the `and` and the [`when`](http://clojuredocs.org/clojure_core/clojure.core/when) evalutes to `nil`.
+- `me` has a value and the key timeout **IS NOT** within `TIMEOUT_RESOLUTION_MS` (defined as 10) so the `and` fails and the `when` evaluates to `nil`.
+- `me` has a value and the key timeout **IS** within `TIMEOUT_RESOLUTION_MS` so the `and` is `true` and the `when` evaluates to the `TimeoutQueueEntry`'s `channel`.
 
 Why do this?  It seems to be an optimiziation.  If I request 1,000 timeouts all 500 ms from now then they can all share a single channel.  That appears to be the purpose of the `ConcurrentSkipListMap` `timeouts-map`.  Neato.
 
