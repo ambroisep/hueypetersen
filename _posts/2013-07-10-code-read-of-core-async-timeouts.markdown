@@ -25,7 +25,7 @@ Any-who ... the name of the game is non-blocking.  One example of taking a block
 
 {% endhighlight %}
 
-In the above sample the `go` block is non blocking (while the `<!!` does block outside the `go`).  The `(timeout 1000)` function returns a channel that will be closed after 1000 milliseconds.  Since it uses the `channel` abstraction the `<!` is able ot release control of the thread while it waits on the close.
+In the above sample the `go` block is non blocking (while the `<!!` does block outside the `go`).  The `(timeout 1000)` function returns a channel that will be closed after 1000 milliseconds.  Since it uses the `channel` abstraction the `<!` is able to release control of the thread while it waits on the close.
 
 I was interested in the mechanics of how this works.  It seems like a reasonable place to start examining the `core.async` codebase and get familiar with Java while I was at it.  I don't have a Java background so my understanding of different tools on the JVM is limited.
 
@@ -160,11 +160,11 @@ So how do we use this map entry?
 
 This bit of code is pretty cool.  We have three scenarios:
 
-- `me` is `null` and we fail the `and` and the [`when`](http://clojuredocs.org/clojure_core/clojure.core/when) evalutes to `nil`.
+- `me` is `null` and we fail the `and` and the [`when`](http://clojuredocs.org/clojure_core/clojure.core/when) evaluates to `nil`.
 - `me` has a value and the key timeout **IS NOT** within `TIMEOUT_RESOLUTION_MS` (defined as 10) so the `and` fails and the `when` evaluates to `nil`.
 - `me` has a value and the key timeout **IS** within `TIMEOUT_RESOLUTION_MS` so the `and` is `true` and the `when` evaluates to the `TimeoutQueueEntry`'s `channel`.
 
-Why do this?  It seems to be an optimiziation.  If I request 1,000 timeouts all 500 ms from now then they can all share a single channel.  That appears to be the purpose of the `ConcurrentSkipListMap` `timeouts-map`.  Neato.
+Why do this?  It seems to be an optimization.  If I request 1,000 timeouts all 500 ms from now then they can all share a single channel.  That appears to be the purpose of the `ConcurrentSkipListMap` `timeouts-map`.  Neato.
 
 This was the first expression in an `or` expression.
 
