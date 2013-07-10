@@ -218,23 +218,4 @@ The majority of this code is built using Java constructs which I find interestin
 
 Another cool thing about this is we see how `timeouts` create their own thread to handle blocking.  It is a pool of 1, so not too exciting, but shows how specialty threads can handle blocking and communicating with the non-blocking `go` threads using channels.  Useful pattern when you can't avoid blocking.
 
-The last thing is that the `timeouts` function itself is potentially blocking -- I think.
-
-{% highlight clojure %}
-
-(.put timeouts-queue timeout-entry)
-
-{% endhighlight %}
-
-From the [docs](http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/BlockingQueue.html#put%28E%29), `put` is blocking -- *"waiting if necessary for space to become available"*.  This raises the question -- what does it mean to block?  Looking at the [source](http://fuseyism.com/classpath/doc/java/util/concurrent/DelayQueue-source.html) it has to acquire a lock for `put`.  I don't think this matters, I'm just curious the semantics.
-
-According to [wikipedia](http://en.wikipedia.org/wiki/Non-blocking_algorithm):
-
-> Literature up to the turn of the 21st century used "non-blocking" synonymously with lock-free. However, since 2003, the term has been weakened to only prevent progress-blocking interactions with a preemptive scheduler. In modern usage, therefore, an algorithm is non-blocking if the suspension of one or more threads will not stop the potential progress of the remaining threads.
-
-So it appears having a lock doesn't rule you out of non-blocking.  You just need to use the lock smart.  I'm guessing the *j.u.c* people are pretty smart so mortals don't have to be.  Again, I don't think this matters, I was just curious.
-
-Conclussion
----
-
 So fun stuff.  I should spend more time reading code.  I'm always left wondering if my Clojure is aesthetically pleasing or not so reading code from people who do this for a living seems like a good way to develop a taste.
