@@ -218,4 +218,17 @@ The majority of this code is built using Java constructs which I find interestin
 
 Another cool thing about this is we see how `timeouts` create their own thread to handle blocking.  It is a pool of 1, so not too exciting, but shows how specialty threads can handle blocking and communicating with the non-blocking `go` threads using channels.  Useful pattern when you can't avoid blocking.
 
+The last thing is -- what does it mean to block?  According to the docs `puts` to the queue in `timeout` can block -- *"waiting if necessary for space to become available"*.
+
+{% highlight clojure %}
+
+(.put timeouts-queue timeout-entry)
+
+{% endhighlight %}
+
+When do you care?  If its in *j.u.c* is it going to be a fast enough block that its not an issue?
+
+Conclussion
+---
+
 So fun stuff.  I should spend more time reading code.  I'm always left wondering if my Clojure is aesthetically pleasing or not so reading code from people who do this for a living seems like a good way to develop a taste.
