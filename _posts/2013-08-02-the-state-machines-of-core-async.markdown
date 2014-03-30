@@ -60,7 +60,15 @@ If we expand the `go` macro from this function we can get the state machine func
 
 {% endhighlight %}
 
-There is a lot here.  There are three things I want to point out.  The first is the `java.util.concurrent.atomic.AtomicReferenceArray`.  This is where all of the state of the state machine is stored.  It includes the current state (*index 1*), the binding frame (*index 3*), and even the state machine function itself (*index 0*).  The `aset-all!` function mutates the array with index / value pairs while the `aget-object` gets the value for an index from the array.
+There is a lot here. There are three things I want to point out. The first is the `java.util.concurrent.atomic.AtomicReferenceArray`. This is where all of the state of the state machine is stored. It has the following special indices:
+
+- 0 : FN-IDX : the state machine function
+- 1 : STATE-IDX : the current state
+- 2 : VALUE-IDX : the value the expression in the go block evaluate to
+- 3 : BINDINGS-IDX : the captured-bindings
+- 4 : USER-START-IDX : the channel that will be returned by the go block
+
+The `aset-all!` function mutates the array with index / value pairs while the `aget-object` gets the value for an index from the array.
 
 The second is that the function either accepts a state (the above array) or if none is given initializes the state.
 
