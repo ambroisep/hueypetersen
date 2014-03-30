@@ -1,0 +1,19 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+svg line {
+  stroke-linecap: square;
+}
+svg .borders {
+  stroke: black;
+  stroke-width: 2px;
+}
+svg .walls {
+  stroke: gray;
+  stroke-width: 1px;
+}
+svg .path {
+  stroke: red;
+  stroke-width: 1px;
+}
