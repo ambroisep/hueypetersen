@@ -22,18 +22,39 @@ I'm going to walk through my first expirmenting with GraphQL.  At this point the
 
 At the top level of the graph / query (not sure what to call it exactly ... lets go with graph) you have a bunch of root calls.  We can represent this as a map with each root call as a key and then the fields of that root call as the value of the key.  The shape of the root call can be whatever you want as long as it uniquely specifies the data you want.  The examples we've seen so far are `Node(id)` and `Viewer`.
 
+{% highlight clojure %}
+
+{
+  Node(1) { name }
+  Viewer { birthday { month } }
+}
+
+{% endhighlight %}
+
+
 One thing that I didn't really grasp watching the video but the FAQ pointed out is that `Node` and `Viewer` are not some magical GraphQL thing -- they are just implementations for Facebook's needs -- `Node` has to do with their whole Facebook Graph stuff and `Viewer` is just short hand for the current user.  This means you can create whatever root calls you need for your application.  Want the model in the root call?  Make a `Movie(12345)` root call.  Have a bunch of REST/HTTP services?  Make a `Resource(/api/movie/12345)` root call.  Want to mix github into your application?  Add a `Github(/whatever/github/looks/like)` root call.
 
 Of course I'm just guessing.
 
 As for the representation of this, I'm going to use a Variant (aka fancy tuple?).  As I type this I am overcome with fear that I'm using this word wrong.  But after watching [Jeanine Adkisson's](https://twitter.com/jneen_) [talk](https://www.youtube.com/watch?v=ZQkIWWTygio) at Clojure Conj I want to describe everything as a Variant.  So for `Node(12345)` we'd have `[:node 12345]` and `Viewer` is `[:viewer]` and `Resource(/api/movie/1234)` is `[:resource "/api/movie/1234"]`.  The tuple can have as many fields as it needs.
 
+{% highlight clojure %}
+
+{
+  [:node 42] { name }
+  [:viewer] { birthday { month } }
+  [:movie 13] { title, rating }
+}
+
+{% endhighlight %}
+
+
 One limit of this is that our language needs to support vectors as map keys and have meaningful equality so that if we join two graphs both with `[:node 12345]` we don't end up with two keys.  Clojure is what I'm using and I *think* [immutablejs](https://github.com/facebook/immutable-js) paired with [transitjs](https://github.com/cognitect/transit-js) will work on the clientside (I want this to be true).
 
 Fields
 ------
 
-So now that we have root calls, what about the fields?  I'm going with a set that has fields as keywords or tuples (for nested fields).
+So now that we have root calls, what about the fields?  I'm going with a set that has fields as keywords or tuples for nested fields.
 
 {% highlight clojure %}
 
