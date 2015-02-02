@@ -20,8 +20,6 @@ Roots
 
 I'm going to walk through my first expirmenting with GraphQL.  At this point the resources I know about are the session video (linked above) and the [Unofficial Relay FAQ](https://gist.github.com/wincent/598fa75e22bdfa44cf47) by [Greg Hurrell](https://twitter.com/wincent).
 
-_NOTE: if you can answer [my question](https://gist.github.com/wincent/598fa75e22bdfa44cf47#comment-1384944) on the FAQ, please do!_
-
 At the top level of the graph / query (not sure what to call it exactly ... lets go with graph) you have a bunch of root calls.  We can represent this as a map with each root call as a key and then the fields of that root call as the value of the key.  The shape of the root call can be whatever you want as long as it uniquely specifies the data you want.  The examples we've seen so far are `Node(id)` and `Viewer`.
 
 One thing that I didn't really grasp watching the video but the FAQ pointed out is that `Node` and `Viewer` are not some magical GraphQL thing -- they are just implementations for Facebook's needs -- `Node` has to do with their whole Facebook Graph stuff and `Viewer` is just short hand for the current user.  This means you can create whatever root calls you need for your application.  Want the model in the root call?  Make a `Movie(12345)` root call.  Have a bunch of REST/HTTP services?  Make a `Resource(/api/movie/12345)` root call.  Want to mix github into your application?  Add a `Github(/whatever/github/looks/like)` root call.
@@ -57,23 +55,9 @@ Representing nested fields as a tuple might end up being a terrible idea -- who 
 
 The one thing missing is how to handle one-to-many.  Short answer -- I don't really know.
 
-Long answer -- this is my main confusion around GraphQL at the moment.  I'm not sure how to square these two examples up:
+\[**update:** _Daniel Schafer has clarified one-to-many's in the FAQ so I updated this section_\]
 
-`friends.first(1) {cursor, node {name}}`
-
-**and**
-
-`mutual_friends {count}`
-
-I'd think both `friends` and `mutual_friends` are one-to-many.  I can see that you'd want a way to get the count of a one-to-many without expanding it, but I don't see how you could get a one-to-many without expanding it but also grab the first X nodes.  In the FAQ an example is shown that looks like:
-
-`friends.first(1) {edges {cursor, node {name}}}`
-
-This adds `edges` as a field -- which the session examples don't have -- within a one-to-many that will hold the children.  I could see adding a count to that pretty easily:
-
-`friends.first(1) {count, edges {cursor, node {name}}}`
-
-If that worked it would return the full count of `friends` along with the first friend's `name`.  But I don't know which representation is valid.  Either way it could still be represented using tuples (variants?) and sets.
+Long answer -- the FAQ has been updated with a bit more information on one-to-many's.  It sounds like there is an intermediate object between the field and the child node's referred to as the 'connection object'.  This makes sense -- you want some meta information around the collection.  A primary use case is pagination as discussed in the session.  In terms of representation we can keep the same style:
 
 {% highlight clojure %}
 
@@ -94,7 +78,7 @@ If that worked it would return the full count of `friends` along with the first 
 
 {% endhighlight %}
 
-So yah, that is ugly, but can be represented.
+So yah, that is ugly, but can be represented.  And if we leave `edges` off we can get the count ignoring any cost associated with fetching the full collection.  _(and count sounds like it is still tricky though -- what is a count in the world of pagination?)_
 
 Implementation
 --------------
@@ -283,7 +267,7 @@ var FriendListItem = React.createClass({
 
 {% endhighlight %}
 
-Of course one-to-many is important and I'm currently unsure how to handle that.  I'd also like to make a weird non-datomic root call, kind of like the Github example I threw around earlier.
+Of course one-to-many is important and I'm currently unsure how to handle that but have a better idea due to the FAQ feedback (thanks!).  I'd also like to make a weird non-datomic root call, kind of like the Github example I threw around earlier.
 
 Finally I'd like to get validation and schema working.  Datomic has a great schema that is just data.  The type and cardinality are right there at your fingertips!
 
