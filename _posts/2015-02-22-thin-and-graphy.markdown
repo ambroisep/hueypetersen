@@ -3,7 +3,7 @@ layout: post
 title: Thin and Graphy
 ---
 
-Normal disclaimer -- this is not GraphQL.  This is me making stuff up based on a [30 minute conference talk](https://www.youtube.com/watch?v=9sc8Pyc51uU) and a [gist](https://gist.github.com/wincent/598fa75e22bdfa44cf47).
+Normal disclaimer -- this is not GraphQL.  This is me making stuff up based on a [30 minute conference talk](https://www.youtube.com/watch?v=9sc8Pyc51uU) and a [gist](https://gist.github.com/wincent/598fa75e22bdfa44cf47) -- and now a [tweet](https://twitter.com/schrockn/status/567902849272659968/photo/1)!
 
 I spent 10 days working on an implementation of GraphQL queries using [Prismatic Graph](https://github.com/Prismatic/plumbing).  It didn't really work out through no fault of the library but due to my misuse of the library.  I started to write up what I had done and found myself writing pseudo code to explain the actual working code and that seemed like a bad sign.  *"Pretend this code looked like this much more obvious and explainable code -- thats what it does"*.
 
