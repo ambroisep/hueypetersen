@@ -48,6 +48,8 @@ This maps what GraphQL exposes externally -- name -- to the internal representat
 
 Again, just a guess.
 
+This keeps it thin -- it just needs to know how to get from point A to point B.
+
 Instaparse!
 -----------
 
