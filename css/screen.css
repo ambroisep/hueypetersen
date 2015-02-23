@@ -89,3 +89,7 @@ span.date {
 .posts .date {
 	float: right;
 }
+
+.post img {
+  max-width: 760px;
+}
