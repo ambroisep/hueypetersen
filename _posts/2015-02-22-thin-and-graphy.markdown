@@ -159,7 +159,7 @@ The equivalent of my `phpType` is just a clojure map of the organization respons
 
 {% endhighlight %}
 
-Also, as a reminder, keywords are functions in clojure.
+Also, as a reminder, keywords are functions in clojure which makes simple getters nice to write.
 
 {% highlight clojure %}
 
@@ -279,15 +279,9 @@ For one to many I don't do anything special -- I just make a few more nodes.
 
 The only real difference is that the field `:edges` is marked with a cardinality of `:many`.
 
-Filters are not implemented.  E.g. `first(10)` or `after(12345)`.  There is nothing stopping this implementation from doing filters -- just add them to the executor function.  I just have some outstanding questions I need to think about on how I want to do filters.
+Filters are not implemented.  E.g. `friends.first(10)` or `friends.after(12345)`.  There is nothing stopping this implementation from doing filters -- just add them to the executor function.  I just have some outstanding questions I need to think about on how I want to do filters.
 
-For example how special are `first` and `after`?  In the talk about Relay and GraphQL it is mentioned that updating a graph from `first(10)` to `first(20)` would result in something like `after(12345).first(10)`.  I have no idea how you would do that without knowing `first` is special and its relation to `after`.
-
-The other thing is I remember hearing / reading that `after` could contain information on what type of filters are already applied.  So I'm not sure what updating the count to 20 on something like `friends.birthday_in_range(X, Y).first(10)` would turn into: `friends.birthday_in_range(X, Y).after(12345).first(10)` or `friends.after(12345).first(10)`.  Basically does `after` replace all the other filters once you start paginating or do you still chain the calls?
-
-And then what about call order?  Is `friends.first(10).after(12345)` equivalent to `friends.after(12345).first(10)`.  I would assume -- but then how does GraphQL know that -- how special is `first` -- is it always applied last?
-
-So ... a few questions.
+Basically I am curious around how special to treat `first` and `after`.  It seems like making these two special cases would make my life way easier.
 
 Enter Manifold
 --------------
@@ -356,6 +350,6 @@ When I first started writing Clojure I felt like I couldn't really just sit down
 
 Exploring the schema with the `__type__` construct is so powerful.  I immediately started using it on Robert's demo to see what type of queries I could write.  I need to add that.
 
-I had previously wondered how Facebook handled `Node` being their root call for damn near everything.  Then while writing this I noticed the `fields` on their GraphQL definition is a function -- not static.  I wonder if that is how -- they can't statically tell which fields a Node might have in their graph but as they expand / execute the graph they can build it out using the `fields` function.  That wouldn't work for me -- the fields and types are defined up front.  Food for thought.
+I had previously wondered how Facebook handled `Node` being their root call for damn near everything.  Then while writing this post I noticed the `fields` on their GraphQL definition is a function -- not static.  I wonder if that is how -- they can't statically tell which fields a Node might have in their graph but as they expand / execute the graph they can build it out using the `fields` function.  That wouldn't work for me -- the fields and types are defined up front.  Food for thought.
 
 So yah, another week, another stab at GraphQL.  Good times.
