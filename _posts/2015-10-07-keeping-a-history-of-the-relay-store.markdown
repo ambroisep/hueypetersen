@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Building a History of the Relay Store
+title: Keeping a History of the Relay Store
 ---
 
 I [previously](/posts/2015/09/30/quick-look-at-the-relay-store/) looked at the implementation of the Relay Store.  Most of this was gleaned from looking at the source code for Relay and setting `debugger` statements all over the code to dig deeper with the Chrome Developer Tools.  Later on I decided I wanted to visualize the store and made a little inspector.
