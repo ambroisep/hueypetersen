@@ -3,7 +3,7 @@ layout: post
 title: Experimenting with GraphQL Subscriptions
 ---
 
-Subscriptions were recently added to [graphql-js](https://github.com/graphql/graphql-js/pull/189) via [@skevy](https://twitter.com/skevy).  It is early times for subscriptions and things can change but there is enough there to experiment with the implementation.  So I did!
+Subscriptions were recently added to [graphql-js](https://github.com/graphql/graphql-js/pull/189) via [@skevy](https://twitter.com/skevy).  It is early times for subscriptions and things can change but there is enough implementation there to experiment with.  So I did!
 
 Code for the experiment is on [github](https://github.com/eyston/graphql-todo-subscriptions) as well as running on [heroku](https://secure-reef-2553.herokuapp.com/).
 
@@ -21,7 +21,7 @@ subscription {
 }
 </pre>
 
-And when a todo is added the client would receive the payload:
+And when a todo is added the client would get pushed the subscription:
 
 {% highlight javascript %}
 
@@ -53,8 +53,8 @@ This shifts the burden of how to return multiple responses from a subscription t
 The client subscribes to `todoAdd` with the following query:
 
 <pre>
-subscription($clientSubscriptionId: String) {
-  addTodo(clientSubscriptionId: $clientSubscriptionId) {
+subscription {
+  addTodo {
     todo {
       id
       text
@@ -64,7 +64,7 @@ subscription($clientSubscriptionId: String) {
 }
 </pre>
 
-The first query execution sets up the subscription.  The `clientSubscriptionId` is used by the client to identify the subscription.  The initial result of the query is pretty boring since no todo has been added yet.
+The first query execution sets up whatever is required to react to events.  In this example lets assume there is a `TODO_ADD` event within our application that this subscription can listen for.  On the initial subscription execution a mechanism is setup to listen for the `TODO_ADD` event and we return a response to the client.
 
 {% highlight javascript %}
 
@@ -78,9 +78,11 @@ The first query execution sets up the subscription.  The `clientSubscriptionId` 
 
 {% endhighlight %}
 
-This completes the client request.  It is now up to the server to push new query results to the client.
+The response is sort of weird.  There was no `TODO_ADD` event on the initial query execution -- we hadn't even started listening for one yet -- so instead a `null` payload is returned.
 
-A new todo is added ... by someone somewhere.  This raises an event!
+It is now up to the server to push new query results to the client.
+
+When a new todo is added -- by someone somewhere -- a `TODO_ADD` event is raised!
 
 {% highlight javascript %}
 
@@ -109,12 +111,14 @@ The server then re-runs the subscription query in response to the event with the
 
 {% endhighlight %}
 
-Voila!  This continues for each event until the client unsubscribes.
+Voila!  This continues for each event until the client unsubscribes.  The unsubscribe process happens completely outside of `graphql-js`.
 
-Pain Points
------------
+So Many Options
+---------------
 
-So thats how (I think) things should work.  I'm going to now go over my implementation along with the pain points I came across.  The goal of this is useful feedback -- one can dream.
+The rest of this post is going to discuss choices I faced while implementing subscriptions in a toy application (yup, todos!).  Originally I had wanted to try and expose pain points to provide feedback for the implementation but it turns out most of the pain points are not due to any limitations but instead due to there being many ways to do the same thing.  This is not a bad thing but I lack any long term experience to know if some are better than others.
+
+So instead of providing useful feedback I end up requesting feedback :).
 
 Saving the Query
 ----------------
@@ -123,141 +127,138 @@ Since `graphql-js` continues to return a promise we need to run the query multip
 
 Also, the query is not the only information we need.  We also need the variables, operation name, and root value.  The variables and operation name can be saved along with the query but you probably don't want to save the root value.  It is totally legit to have the root value contain references to caches, databases, or what not.  Instead this means you need to make sure your root value is always generated in a consistent manner.  Previously this was easy -- you probably only generated it in one place!  But now queries are run in response to client requests and server events so the root value might be generated in more places.  Not a big deal, but this does insert opportunities to be inconsistent.
 
-Finally the subscription has an identity: `clientSubscriptionId`.  This is useful for identity as well as idempotency (discussed later).  Without some kind of convention only the resolve function of a subscription can know the value of `clientSubscriptionId` for sure.  For example the following three queries all have the same `clientSubscriptionId` but I don't see how you'd know that anywhere other than the resolve function.
+The choice I had was:
 
-<pre>
-subscription($clientSubscriptionId: String) {
-  addTodo(clientSubscriptionId: $clientSubscriptionId) { todo { id } }
-}
+- save the subscription query within the resolve functions
+- pass information from the client on what type of operation a query is and save it before executing subscription queries
 
-// variables: { clientSubscriptionId: 123 }
-</pre>
+I ended up trying both.  My first run saved the query inside each subscriptions resolve function.  The benefits of this is that the query string can remain opaque all the way through your middleware.  The downside is that the resolve function becomes responsible for pulling the query and context from _somewhere_ to be saved.  I passed it as part of the root value but I believe the third argument to the resolve function also contains this information.
+
+My second attempt used observables (I wanted to try those out) and saved the query before executing `graphql-js`.  This meant the type of query (e.g. subscription) was passed along from client to server.
+
+I'm not sure which of these I prefer.  Which one is better probably comes down to the question of how to handle multiple subscription fields.
+
+Multiple Subscription Fields
+----------------------------
+
+Even through `graphql-js` doesn't have the notion of a subscription as a concrete thing with identity -- it is just a query string -- your implementation probably will.  For example I had a subscription model which included the query information (saved above) along with any other information required to run the query in response to an event and unsubscribe the query in response to the client.
+
+This raises the question of how to handle multiple fields on a subscription query.
 
 <pre>
 subscription {
-  addTodo(clientSubscriptionId: 123) { todo { id } }
+  addTodo {
+    todo {
+      id
+      text
+      complete
+    }
+  }
+  deleteTodo {
+    deletedTodoId
+  }
 }
-
-// variables: { }
 </pre>
 
-<pre>
-subscription($foo: String) {
-  addTodo(clientSubscriptionId: $foo) { todo { id } }
-}
+Are `addTodo` and `deleteTodo` two separate subscriptions meaning they can be unsubscribed from independently?  Or are they grouped together as one logical subscription?  Both seem reasonable.
 
-// variables: { foo: 123 }
-</pre>
+If they are grouped together then saving the query inside the resolve function becomes weird -- you have two resolve functions which know nothing about each other which both need to save themselves to the same subscription.  Instead if the subscription is saved before the resolve functions run then an identifier for the subscription can be created that each resolve function groups itself under.
 
-This lead me to the situation where I handle saving the subscription query inside the resolve function itself.
+I tried both of these.  Again, I'm not sure which I prefer.  I started off not wanting to know what type of operation a query string was which meant I did it all in the resolve function resulting in one subscription per field in the query.  But in the end I found I needed to differentiate operation types for other reasons so saving it before resolve was also doable.
 
 Multiple Contexts for Resolve
 -----------------------------
 
-A subscription resolve function ends up being run in (at least?) two contexts.
+Subscriptions require running the same query multiple times in different contexts.  The two contexts being:
 
-- a clients request to create the subscription
-- a server event to trigger a push to the client
+- a client subscribes to events
+- the server responds to events
 
-The same resolve handles both of these.  This means the resolve has to make sure it only creates the subscription once.  The `clientSubscriptionId` is useful in this regard.  The resolve function can check if the client has an existing subscription with a matching `clientSubscriptionId` and either create the subscription or not.
+The resolve functions for a subscription field end up needing to know this.  I initially made the distinction between states implicit but ended up making it explicit with a `subscription mode` root value: `INITIALIZE` and `EVENT`.  I think implicit is fine but was trying a bunch of different implementations so what implicitly defined `INITIALIZE` vs `EVENT` kept changing.  Plus being explicit is always nice if not a bit heavy handed :).
 
-In the case of a server event the event payload somehow needs to be included with the query.  I did this by including the event -- if one exists -- in the root value.  This leads to the situation where the root value now differs between contexts -- which might be weird.  The resolve function needs to be able to handle not having an event since the initial request to create a subscription most likely won't have one.
+Executing the query in response to a client subscription request would generally not have any event data associated with it.  For example if a user subscribes to `addTodo` there is no `TODO_ADD` event payload at the time of subscription.  Same query but multiple contexts.
 
-The resolve function has to also potentially handle an event meant for a different subscription.  For example take the following query:
+When an event did happen it would be placed in the root value for the query execution.  This required having two places a root value is generated -- one in response to a client without an event and another in response to a server event with that event.
 
-<pre>
-subscription {
-  addTodo(clientSubscriptionId: 1) { todo { id } }
-  deleteTodo(clientSubscriptionId: 2) { deletedTodoId }
-}
-</pre>
+At the end of the day my resolve functions had two duties.  On `INITIALIZE` they would do whatever is required to start listening to server events.  On `EVENT` they would use the root value event payload to resolve themselves.
 
-This query can be run in the context of no event, an add todo event, a delete todo event, or maybe both!  The same type of event could even be in the same query twice:
+The final wrinkle was again handling multiple fields on the same subscription.
 
 <pre>
 subscription {
-  addTodoId: addTodo(clientSubscriptionId: 1) { todo { id } }
-  addTodoText: addTodo(clientSubscriptionId: 2) { todo { text } }
+  addTodo {
+    todo {
+      id
+      text
+      complete
+    }
+  }
+  deleteTodo {
+    deletedTodoId
+  }
 }
 </pre>
 
-This ended up leading to more conditionals in my resolve functions.  It also meant I needed two ways to execute a query: one with an event payload, and one without an event payload.
-
-No Event Responses
-------------------
-
-Continuing with the `addTodo` example -- there are going to be query responses with no event.  So what does the response look like?  I made the response `null` for the subscription.
+When this query is executed in response to a server event it might be a `TODO_ADD` event or `TODO_DELETE` event.  The resolve function for `addTodo` needs to ignore `TODO_DELETE` events.  The server events in my implementation had a `type` field which the resolve function could be conditional on.
 
 {% highlight javascript %}
 
 {
-  "data": {
-    "addTodo": {
-      "todo": null
-    }
-  }
+  "type": "TODO_ADD",
+  "todoId": 123
 }
 
 {% endhighlight %}
 
-I'm not sure if this is good or bad.  Maybe the subscription could just not return until it gets an event, but even in that case there are going to be situations where the subscription resolve needs to render a non-event.  For example a query with two subscription fields:
+That said if you have two subscription fields, both for `addTodo` but one aliased, and a `TODO_ADD` event is triggered on the server I'm not sure what behavior would be expected.  My implementation would end up triggering twice -- once for each field -- but both fields would have a payload in each triggering.  What can you do!
+
+Empty Subscription Responses
+----------------------------
+
+When there is no event on a subscription execution -- what do you respond with?  I just responded with `null`.  I don't know if that is good or bad or what else you could even do!  It is just sort of weird and you need to make sure the client can handle `null` and there is shared knowledge on what `null` means.
+
+I had thought about not responding unless there *is* an event.  But, again, multiple fields forced me to deal with this.
 
 <pre>
 subscription {
-  addTodo(clientSubscriptionId: 1) { todo { id } }
-  deleteTodo(clientSubscriptionId: 2) { deletedTodoId }
+  addTodo {
+    todo {
+      id
+      text
+      complete
+    }
+  }
+  deleteTodo {
+    deletedTodoId
+  }
 }
 </pre>
 
-When this query executes in response to a todo being deleted it won't have an event for add todo.
-
-{% highlight javascript %}
-
-{
-  "data": {
-    "addTodo": {
-      "todo": null
-    },
-    "deleteTodo": {
-      "deletedTodoId": 123
-    }
-  }
-}
-
-{% endhighlight %}
-
-Not really sure if this is good or bad -- the client just needs to know how to handle it.  Or maybe a UNION type for non-results?  I don't know!
+It is totally valid to execute this query with a `TODO_DELETE` event and not a `TODO_ADD` event.  This means `addTodo` has to have *some* value for no event.  Maybe a union value would be better than `null`?
 
 Side Channel
 ------------
 
 Since `graphql-js` doesn't return an observable you need to create a side channel for additional results to get pushed to.  I happen to like that it isn't an observable (yet at least) but still -- this is more work to coordinate at the moment.
 
+I used `socket-io` as a way to push to the client and `EventEmitter` as a substitution for some kind of topic server to listen for new results.  But that is far from a requirement.  Your client could instead poll HTTP and check a database of stored subscription results.  The world is your oyster!
+
 Client Store
 ------------
 
 Since Relay doesn't handle subscriptions yet I made a dumb little store for my todo app.  One issue I ran into is that when I added a todo it got added twice: once by the mutation handler and once by the subscription handler.  This is 100% the fault of my code, but is just something to keep in mind: a client is going to get two responses for mutations it is responsible for!
 
-Good Parts
-----------
-
-Enough pain!
-
-I like that the initial implementation isn't prescriptive.  I think eventually something will emerge -- especially once Relay sets some conventions -- but for now everything you need to build your own subscription layer is there.
-
-For example my toy app is all in memory but I tried to simulate it being distributed and communicating via queues by using `EventEmitter`.  A client creates a queue for results to be pushed to and these results could potentially be pushed from any number of different servers.  The initial request is processed by graphql server A, the next event by graphql server B, etc.
-
-This is also encouraged by the implementation needing to explicitly save the state to run the query multiple times.  A callback or observable might capture that state implicitly instead.
-
-While the basis is having an event based subscription system there isn't anything saying you can't roll up several events into a single subscription.  For example my todo app has the `deleteTodo`, `addTodo`, and `changeTodoStatus` subscriptions.  These each listen to a single event.  But there is also the `todos` subscription.  This listens to all three of the other events and allows a client to subscribe to the list as a whole.
-
-And if you want an observable you can make one no problem.
-
-Finally, it is also very fun to enter a todo on one browser and see it in another ... but I am impressed easily.
-
 Summary
 -------
 
-I think most of the pain is my not knowing what the conventions should be.  With the current state of `graphql-js` you can do whatever you want!  This is great, except I don't know what I want yet :).  I think Relay will help drive a lot of this as well.  While you might be able to do things a ton of different ways it makes sense to make the Relay way an easy path.
+I like that the initial implementation isn't prescriptive.  I think eventually something will emerge -- especially once Relay sets some conventions -- but for now everything you need to build your own subscription layer is there.
 
-And big thanks to @skevy!
+For example my toy app is all in memory but I tried to simulate it being distributed and communicating via pub-sub by using `EventEmitter`.  Each client has a topic it subscribes to for results which can then be published from any number of servers handling events and executing subscription queries.
+
+This was helped by the implementation needing to explicitly save the state to run the query multiple times.  A callback or observable might capture that state implicitly instead which could make you local to one machine.
+
+While the basis is having an event based subscription system there isn't anything saying you can't roll up several events into a single subscription.  For example my todo app has the `deleteTodo`, `addTodo`, and `changeTodoStatus` subscriptions.  These each listen to a single event.  But there is also the [`todos`](https://github.com/eyston/graphql-todo-subscriptions/blob/1af44410b83272f8a2834957b86c22e05625196d/data/schema.js#L200-L204) subscription which listens to all three of the other events and allows a client to subscribe to the list as a whole (sorta live query'ish).
+
+And if you want an observable you can make one no problem.  I toyed with that in this [branch](https://github.com/eyston/graphql-todo-subscriptions/tree/observables) [here](https://github.com/eyston/graphql-todo-subscriptions/blob/observables/server/socket.js#L92-L114).
+
+Finally, it is also very fun to enter a todo on one browser and see it in another ... but I am impressed easily.
