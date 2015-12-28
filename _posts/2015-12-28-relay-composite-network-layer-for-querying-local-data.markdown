@@ -289,7 +289,7 @@ The actual execution of each query is handed off to a separate Relay Network Lay
 
 {% endhighlight %}
 
-These can then all be merged together.
+These can then all be merged together and presented as a single query result to Relay.
 
 {% highlight javascript %}
 
