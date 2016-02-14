@@ -105,23 +105,19 @@ Om.next mutations are different in that they do not return data.  Instead they a
 
 This transaction will both mutate a todo by toggling its `:completed?` value as well as reading that value back.  So while the mutation itself returns no data the transaction as a whole is able to accomplish the same effect of mutating and reading at the same time.
 
-There are a few quirks with this.
-
-The first is the read key `:completed?`.  We aren't actually telling the `transact!` which todo the `:completed?` key toggled on.  Om.next rolls with this by issuing a read for all `:completed?` props it is tracking.  This may or may not be what you want, but you can get around this behavior by being more explicit with your transaction.
+In this transact we aren't actually telling the `transact!` which todo the `:completed?` key toggled on.  Om.next rolls with this by issuing a read for all `:completed?` props it is tracking.  This may or may not be what you want, but you can get around this behavior by being more explicit with your transaction.
 
 <pre>
 (om/transact! this `[(todo/toggle-status {:id ~id}) {[:todo/by-id ~id] [:completed?]}])
 </pre>
 
-No ambiguity here.  The remaining quirk with this is that if you are modifying the identity of something which is not currently mounted that read will be removed from the transaction.  This initially seems similar to the behavior of Relay -- it will only query for values it is currently tracking in the local store.  The difference is that Relay checks its entire local store -- not just what is currently mounted.  I'm not sure how to get om.next to issue a read for something which is in the store but not mounted (which can lead to inconsistent data when that data is finally mounted).  I imagine this stems from the fact that om.next has no opinion on the store.
+No ambiguity here.
 
 Finally you need to make sure the reads in a transact play nicely with your caching strategy.  If your caching strategy is "check the store, if its in the store, don't send it to the remote" you'll run into trouble with mutations.  This caching strategy makes perfect sense for remote reads that are part of `add-root!` and `set-query!` but don't make sense for `transact!`.  If a read is in `transact!` you *ALWAYS* want to send it to the remote.  I'm not sure of a way to determine the context of a read during parsing -- if its a `transact!` or not -- but om.next does provide the `force` function which modifies the ast of the expression and you can use that in your parser.
 
 <pre>
 (om/transact! this `[(todo/toggle-status {:id ~id}) ~(force {[:todo/by-id ~id] [:completed?]} :remote)])
 </pre>
-
-This is all very important as the whole reason to use these tools is to keep your state in sync.  Mastering this is key!
 
 Callbacks
 ---------
@@ -227,11 +223,11 @@ You also have to make sure when you compose queries you do not disturb metadata.
 
 This will produce a valid query, but om.next uses metadata on each part of the query to track which component a query came from.  We've just squashed 'BookHeader' and 'BookBody' into a single query.  The indexer will not be pleased and you'll run into weird issues from inside those two components.
 
-How to compose queries in an om.next idiomatic way is something I'm still learning.
+How to compose queries in an om.next idiomatic way is something I'm still learning.  It seems common to introduce UI structure into the query as a way to compose but I'm still feeling that out.
 
 Conclusion
 ----------
 
-I really don't think om.next is directly comparable to Relay or Falcor.  Relay has a store and Falcor has a model.  In both cases they define semantics around local storage and caching and merging remote data.  The extensibility point for Relay is the network layer while Falcor is the data source.  Om.next has two extensibility points -- the remote and the parser.  This means you don't get any built in functionality around caching, storing, and merging remote and local data.  I think om.next would have a better startup story if it limited its extensibility to remotes and had an opinionated default store.  But this is not the model.
+I don't think om.next is directly comparable to Relay or Falcor.  Relay has a store and Falcor has a model.  In both cases they define semantics around local storage, caching, and merging remote data.  The extensibility point for Relay is the network layer while Falcor is the data source.  Om.next has two extensibility points -- the remote and the parser -- at the cost of not having built in common functionality.
 
 You need to go into om.next knowing that you are going to build a framework.
