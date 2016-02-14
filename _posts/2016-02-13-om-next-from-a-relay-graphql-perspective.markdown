@@ -22,7 +22,7 @@ These are hard questions you need to answer immediately to use remote data.
 
 Once you make those decisions you need to write merge functions which will take that remote data and put it back into your local store.  Again, om.next has no idea what format your local store is in and by default will not deeply merge data.
 
-If your data is all local you can side step this whole conversation and use `db->tree` and be done.  But those aren't the type of applications I build.
+If your data is all local you can side step this whole conversation and use `db->tree` and be done.
 
 The Relay story around this is one of caching and query diffing.  As noted above, if a query can be satisfied locally it will not be sent to a remote.  Additionally Relay will diff a query.  If you run:
 
@@ -188,7 +188,7 @@ export default Relay.createContainer(ChannelScreen, {
 
 In the above example the component requires a 'Channel' and a 'User' and data requirements for each are composed from multiple child components.
 
-Om.next does not make the distinction between fragments and queries.  This isn't to say it doesn't have the conceptual difference -- some queries are not 'root' queries in that they cannot be parsed.  For example `[:id :name :age]` is potentially not a parseable query -- `:id`, `:name`, and `:age` of what?  Potentially it is a parseable query -- those might be root parse fields!  All queries share the same shape but you do make a mental distinction between 'root' queries and 'child' queries.
+Om.next does not make the distinction between fragments and queries.  This isn't to say it doesn't have the conceptual difference -- some queries are not 'root' queries in that they cannot be parsed.  For example `[:id :name :age]` is potentially not a parseable query -- `:id`, `:name`, and `:age` of what?  Potentially it is a parseable query -- those might be root parse fields!  All queries share the same shape but you make a mental distinction between 'root' queries and 'child' queries.
 
 Om.next also supports composing queries.
 
