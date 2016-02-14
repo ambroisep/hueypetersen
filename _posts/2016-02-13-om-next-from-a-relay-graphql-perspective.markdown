@@ -161,6 +161,74 @@ You need to be careful to use this consistently.
 
 This is a no-no.  The author, which has an identity, is pulled into the query directly in order to display their name.  This needs to be in a separate component which has an `Ident`.  This can lead to inconsistent views.
 
+Fragments
+---------
+
+Relay allows composition of queries via fragments.  Each component exposes one or more fragments which constitute data requirements.  These bubble up until they finally meet a root component and get put into a query.
+
+It is common to expose multiple fragments from a single component as well as compose multiple child fragments into a single parent fragment.
+
+<pre>
+export default Relay.createContainer(ChannelScreen, {
+  fragments: {
+    channel: () => Relay.QL`
+      fragment on Channel {
+        ${ChannelHeader.getFragment('channel')}
+        ${MessageComposer.getFragment('channel')}
+        ${MessageList.getFragment('channel')}
+        ${MemberList.getFragment('channel')}
+      }
+    `,
+    viewer: () => Relay.QL`
+      fragment on User {
+        ${MessageComposer.getFragment('viewer')}
+        ${MemberList.getFragment('viewer')}
+        ${ChannelHeader.getFragment('viewer')}
+      }
+    `
+  }
+});
+</pre>
+
+In the above example the component requires a 'Channel' and a 'User' and data requirements for each are composed from multiple child components.
+
+Om.next does not make the distinction between fragments and queries.  This isn't to say it doesn't have the conceptual difference -- some queries are not 'root' queries in that they cannot be parsed.  For example `[:id :name :age]` is potentially not a parseable query -- `:id`, `:name`, and `:age` of what?  Potentially it is a parseable query -- those might be root parse fields!  All queries share the same shape but you do make a mental distinction between 'root' queries and 'child' queries.
+
+Om.next also supports composing queries.
+
+<pre>
+(defui Book
+  static
+  om/Ident
+  (ident [_ {:keys [id]}]
+    [:book/by-id id])
+  static
+  om/IQuery
+  (query [_]
+    [:id :text {:author (om/get-query Author)}]))
+</pre>
+
+The 'Book' query has its own fields as well as the query of 'Author'.  The composition is slightly more limited though.  Each component can only expose a single query.  You can work around this using [links](https://github.com/omcljs/om/wiki/Thinking-With-Links%21) although with my limited experience I'm not yet sure if they are sufficient replacements for multiple fragments (they require the component to know the identity of its data requirements).
+
+You also have to make sure when you compose queries you do not disturb metadata.
+
+<pre>
+(defui Book
+  static
+  om/Ident
+  (ident [_ {:keys [id]}]
+    [:book/by-id id])
+  static
+  om/IQuery
+  (query [_]
+    (into [:id] (concat (om/get-query BookHeader)
+                        (om/get-query BookBody)))))
+</pre>
+
+This will produce a valid query, but om.next uses metadata on each part of the query to track which component a query came from.  We've just squashed 'BookHeader' and 'BookBody' into a single query.  The indexer will not be pleased and you'll run into weird issues from inside those two components.
+
+How to compose queries in an om.next idiomatic way is something I'm still learning.
+
 Conclusion
 ----------
 
