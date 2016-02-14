@@ -208,7 +208,7 @@ Om.next also supports composing queries.
     [:id :text {:author (om/get-query Author)}]))
 </pre>
 
-The 'Book' query has its own fields as well as the query of 'Author'.  The composition is slightly more limited though.  Each component can only expose a single query.  You can work around this using [links](https://github.com/omcljs/om/wiki/Thinking-With-Links%21) although with my limited experience I'm not yet sure if they are sufficient replacements for multiple fragments (they require the component to know the identity of its data requirements).
+The 'Book' query has its own fields as well as the query of 'Author'.  The composition is not the same as Relay's though.  Each component can only expose a single query.  You can work around this using [links](https://github.com/omcljs/om/wiki/Thinking-With-Links%21) although with my limited experience I'm not yet sure if they are sufficient replacements for multiple fragments (they require the component to know the identity of its data requirements).
 
 You also have to make sure when you compose queries you do not disturb metadata.
 
