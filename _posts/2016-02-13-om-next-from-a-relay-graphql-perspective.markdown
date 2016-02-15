@@ -188,7 +188,7 @@ export default Relay.createContainer(ChannelScreen, {
 
 In the above example the component requires a 'Channel' and a 'User' and data requirements for each are composed from multiple child components.
 
-Om.next does not make the distinction between fragments and queries.  This isn't to say it doesn't have the conceptual difference -- some queries are not 'root' queries in that they cannot be parsed.  For example `[:id :name :age]` is potentially not a parseable query -- `:id`, `:name`, and `:age` of what?  Potentially it is a parseable query -- those might be root parse fields!  All queries share the same shape but you make a mental distinction between 'root' queries and 'child' queries.
+Om.next does not make the distinction between fragments and queries.  This isn't to say it doesn't have the conceptual difference -- some queries are not 'root' queries in that they cannot be parsed.  For example `[:id :name :age]` is potentially not a parseable query -- `:id`, `:name`, and `:age` of what?  On the other hand it potentially is a parseable query -- those might be parse fields!  All queries share the same shape but you end up making a mental distinction between 'root' queries and 'child' queries.
 
 Om.next also supports composing queries.
 
@@ -228,6 +228,6 @@ How to compose queries in an om.next idiomatic way is something I'm still learni
 Conclusion
 ----------
 
-I don't think om.next is directly comparable to Relay or Falcor.  Relay has a store and Falcor has a model.  In both cases they define semantics around local storage, caching, and merging remote data.  The extensibility point for Relay is the network layer while Falcor is the data source.  Om.next has two extensibility points -- the remote and the parser -- at the cost of not having built in common functionality.
+I don't think om.next is directly comparable to Relay.  Relay comes with a store which implements much of the functionality om.next leaves up to the developer.  Falcor is similar to Relay with their Model acting as a built in caching layer.  Both Relay and Falcor provide extensibility points in terms of a network layer for Relay and a data source for Falcor.  You can use completely local data at these extensibility points but it is in addition to, not replacement of, the local stores they both implement.
 
-You need to go into om.next knowing that you are going to build a framework.
+Om.next includes two extensibility points: the remotes and the parser (interface to the local store).  This gives you more control over the semantics you want the local store to have -- you can make the parser do anything.  This lack of opinion on the local store will likely mean that you are going to be building your own framework on top of what om.next provides.
